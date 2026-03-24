@@ -94,8 +94,8 @@ def capital_invertido(nret_x,nret_y,compras,ccompras,beta=None):
         if beta is None:
             w_x=w_y=1
         else:
-            w_x=1/(1+np.abs(beta[it]))
-            w_y=np.abs(beta[it])/(1+np.abs(beta[it]))
+            w_x=np.abs(beta[it]) / (1 + np.abs(beta[it]))
+            w_y=1 / (1 + np.abs(beta[it]))
         
         if compras[it] > 0:
             retorno[it+1] = 0.5*(w_x * nret_x[it]-w_y *nret_y[it])
