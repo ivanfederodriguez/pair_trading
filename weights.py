@@ -36,6 +36,18 @@ def kelly_dynamic_weight(positions, z_matrix, spread_vols):
     w_raw = (np.abs(z_matrix) / (2 * spread_vols[:, None] * n_dinamico_safe)) * np.abs(positions)
     return _normalize(w_raw)
 
+def zscore_inverse_weight(positions, z_matrix, epsilon=0.5):
+    """
+    Estrategia Inversa: Asigna más capital a medida que el z-score 
+    se acerca a 0, y reduce la exposición en divergencias extremas.
+    """
+    # Se suma epsilon para evitar la división por cero y suavizar la curva
+    w_raw = (1.0 / (np.abs(z_matrix) + epsilon)) * np.abs(positions)
+    
+    return _normalize(w_raw)
+
+
+
 def apply_hold_period(w_matrix, positions, half_lives):
     """
     Filtro general: Recibe una matriz de pesos calculada por cualquier estrategia
@@ -80,3 +92,28 @@ def apply_hold_period(w_matrix, positions, half_lives):
     w_held[:, exceso] = w_held[:, exceso] / suma_diaria[exceso]
     
     return w_held
+
+import numpy as np
+
+def calcular_tope_por_promedio_señales(positions_train):
+    """
+    Calcula el promedio de posiciones simultáneas (n) en días activos 
+    y devuelve el tope máximo permitido por par (1/n).
+    """
+    # 1. Sumamos la cantidad absoluta de posiciones abiertas por cada día
+    señales_diarias = np.sum(np.abs(positions_train), axis=0)
+    
+    # 2. Filtramos solo los días donde el algoritmo estuvo dentro del mercado
+    dias_activos = señales_diarias[señales_diarias > 0]
+    
+    if len(dias_activos) == 0:
+        return 1.0, 1.0 # Seguridad: si nunca operó, devuelve 100% y n=1
+        
+    # 3. Calculamos el promedio de posiciones simultáneas (n)
+    n_promedio = np.mean(dias_activos)
+    
+    # 4. Establecemos el tope como 1 / n
+    # Usamos max(1, n) por seguridad, para nunca asignar más del 100% a un par
+    tope_maximo = 1.0 / max(1.0, n_promedio)
+    
+    return tope_maximo, n_promedio
