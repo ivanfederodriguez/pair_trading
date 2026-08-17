@@ -1,6 +1,7 @@
 ''' Codigos computacionales. medias etc
 '''
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 from scipy.stats import linregress
 from statsmodels.tsa.stattools import adfuller
 def select_variables(x,y,tipo='asset'):
